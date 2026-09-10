@@ -1,5 +1,5 @@
 <?php
-namespace api\config;
+namespace Api\Config;
 class Env
 {
     public static function get(string $key, $default = null)
