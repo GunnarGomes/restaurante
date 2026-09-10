@@ -5,7 +5,7 @@ use Api\Core\Response;
 
 class Controller
 {
-    protected function jsonResponse($data, int $statusCode = 200): void
+    protected function jsonResponse(mixed $data, int $statusCode = 200): void
     {
         Response::json($data, $statusCode);
     }
