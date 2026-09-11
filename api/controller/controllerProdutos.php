@@ -32,4 +32,29 @@ class ControllerProdutos extends Controller
 
         $this->jsonResponse(['message' => 'Produto adicionado com sucesso!'], 201);
     }
+    public function updateProduto(int $produtoId, mixed $data)
+    {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare('UPDATE produtos SET categoria_id = :categoria_id, nome = :nome, descricao = :descricao, preco = :preco, disponivel = :disponivel WHERE id = :id');
+
+        $stmt->execute([
+            'id'           => $produtoId,
+            'categoria_id' => $data['categoria_id'],
+            'nome'         => $data['nome'],
+            'descricao'    => $data['descricao'],
+            'preco'        => $data['preco'],
+            'disponivel'   => $data['disponivel'],
+        ]);
+
+        $this->jsonResponse(['message' => 'Produto atualizado com sucesso!']);
+    }
+
+    public function deleteProduto(int $produtoId)
+    {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare('DELETE FROM produtos WHERE id = :id');
+        $stmt->execute(['id' => $produtoId]);
+
+        $this->jsonResponse(['message' => 'Produto deletado com sucesso!']);
+    }
 }
