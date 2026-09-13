@@ -20,7 +20,7 @@ class ControllerProdutos extends Controller
     public function addProduto(mixed $data)
     {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO produtos (categoria_id, nome, descricao, preco, disponivel) VALUES (:categoria_id, :nome, :descricao, :preco, :disponivel)');
+        $stmt = $conn->prepare('INSERT INTO produtos (categoria_id, nome, descricao, preco, disponivel, restaurante_id) VALUES (:categoria_id, :nome, :descricao, :preco, :disponivel, :restaurante_id)');
 
         $stmt->execute([
                 'categoria_id' => $data['categoria_id'],
@@ -28,6 +28,7 @@ class ControllerProdutos extends Controller
                 'descricao'    => $data['descricao'],
                 'preco'        => $data['preco'],
                 'disponivel'   => $data['disponivel'],
+                'restaurante_id' => $data['restaurante_id']
         ]);
 
         $this->jsonResponse(['message' => 'Produto adicionado com sucesso!'], 201);
