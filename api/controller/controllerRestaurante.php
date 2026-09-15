@@ -5,7 +5,7 @@ use \Api\Config\Database;
 
 class ControllerRestaurante
 {
-    public function getAllRestaurantes()
+    public function getRestauranteBy()
     {
         $conn = Database::getConnection();
         $stmt = $conn->prepare('SELECT * FROM restaurantes');

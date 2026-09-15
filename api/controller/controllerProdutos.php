@@ -5,7 +5,16 @@ use \Api\Config\Database;
 use Api\Core\Controller;
 
 class ControllerProdutos extends Controller
-{
+{   
+    public function getAllProdutosByRestaurante(int $restauranteId)
+    {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare('SELECT * FROM produtos WHERE restaurante_id = :restaurante_id');
+        $stmt->execute(['restaurante_id' => $restauranteId]);
+        $produtos = $stmt->fetchAll();
+
+        $this->jsonResponse($produtos);
+    }
     public function getAllProdutosByCategoria(int $categoriaId)
     {
         $conn = Database::getConnection();

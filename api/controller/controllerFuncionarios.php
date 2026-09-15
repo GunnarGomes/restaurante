@@ -20,9 +20,10 @@ class ControllerFuncionarios
     public function createFuncionario(mixed $data)
     {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO funcionarios (cargo_id, nome, telefone, email, ativo) VALUES (:cargo_id, :nome, :telefone, :email, :ativo)');
+        $stmt = $conn->prepare('INSERT INTO funcionarios (cargo_id, restaurante_id, nome, telefone, email, ativo) VALUES (:cargo_id, :restaurante_id, :nome, :telefone, :email, :ativo)');
         $stmt->execute([
             ':cargo_id' => $data['cargo_id'],
+            ':restaurante_id' => $data['restaurante_id'],
             ':nome' => $data['nome'],
             ':telefone' => $data['telefone'],
             ':email' => $data['email'],
