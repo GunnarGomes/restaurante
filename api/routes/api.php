@@ -14,7 +14,7 @@ $router->addRoute('POST', '/produtos', [ControllerProdutos::class,'addProduto'])
 $router->addRoute('PUT', '/produtos/{produto_id}', [ControllerProdutos::class,'updateProduto']);
 
 $router->addRoute('GET', '/restaurantes', [ControllerRestaurante::class,'getAllRestaurantes']);
-$router->addRoute('GET', '/restaurantes/{restaurante_id}', [ControllerRestaurante::class,'getRestauranteById']);
+
 
 $router->addRoute('GET', '/mesas/{restaurante_id}', [ControllerMesas::class,'getAllMesasByRestaurante']);
 $router->addRoute('POST', '/mesas', [ControllerMesas::class,'addMesa']);

@@ -21,6 +21,9 @@ class ControllerFuncionarios
     {
         $conn = Database::getConnection();
         $stmt = $conn->prepare('INSERT INTO funcionarios (cargo_id, restaurante_id, nome, telefone, email, ativo) VALUES (:cargo_id, :restaurante_id, :nome, :telefone, :email, :ativo)');
+
+        
+
         $stmt->execute([
             ':cargo_id' => $data['cargo_id'],
             ':restaurante_id' => $data['restaurante_id'],
