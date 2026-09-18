@@ -2,9 +2,11 @@
 namespace Api\Routes;
 use Api\Core\Router;
 use Api\Core\Controller;
+use Api\Controller\ControllerAuth;
 use Api\Controller\ControllerMesas;
 use Api\Controller\ControllerRestaurante;
 use Api\Controller\ControllerProdutos;
+use Api\Controller\ControllerContasAcesso;
 
 $router = new Router();
 
@@ -20,3 +22,7 @@ $router->addRoute('GET', '/mesas/{restaurante_id}', [ControllerMesas::class,'get
 $router->addRoute('POST', '/mesas', [ControllerMesas::class,'addMesa']);
 $router->addRoute('PUT', '/mesas/{mesa_id}', [ControllerMesas::class,'updateMesa']);
 $router->addRoute('DELETE', '/mesas/{mesa_id}', [ControllerMesas::class,'deleteMesa']);
+
+// rotas de autenticação
+$router->addRoute('POST', '/auth/login', [ControllerAuth::class,'login']);
+$router->addRoute('POST', '/create-account', [ControllerContasAcesso::class,'createContaAcesso']);
