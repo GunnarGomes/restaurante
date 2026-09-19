@@ -1,30 +1,23 @@
 <?php
 
 namespace Api\Controller;
-use \Api\Config\Database;
 
-class controllerCargos
+use Api\Core\Controller;
+
+class ControllerCargos extends Controller
 {
-    public function getAllCargos()
+    public function getAllCargos(): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM cargos');
-        $stmt->execute();
-        $cargos = $stmt->fetchAll();
-
-        header('Content-Type: application/json');
-        echo json_encode($cargos);
+        $this->jsonResponse($this->db()->query('SELECT * FROM cargos')->fetchAll());
     }
 
-    public function createCargo(mixed $data)
+    public function createCargo(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO cargos (nome) VALUES (:nome)');
-        $stmt->execute([
-            ':nome' => $data['nome']
-        ]);
+        $this->validate($data, ['nome']);
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Cargo criado com sucesso']);
+        $stmt = $this->db()->prepare('INSERT INTO cargos (nome) VALUES (:nome)');
+        $stmt->execute($this->params($data, ['nome']));
+
+        $this->created('Cargo criado com sucesso');
     }
 }

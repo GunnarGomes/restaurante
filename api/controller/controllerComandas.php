@@ -1,33 +1,44 @@
 <?php
 
 namespace Api\Controller;
-use \Api\Config\Database;
 
-class ControllerComandas
+use Api\Core\Controller;
+use Api\Core\HttpException;
+
+class ControllerComandas extends Controller
 {
-    public function getAllComandas()
+    /** Antes listava comandas de TODOS os restaurantes; agora filtra por restaurante. */
+    public function getAllComandasByRestaurante(int $restaurante_id): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM comandas');
-        $stmt->execute();
-        $comandas = $stmt->fetchAll();
-
-        header('Content-Type: application/json');
-        echo json_encode($comandas);
+        $stmt = $this->db()->prepare('SELECT * FROM comandas WHERE id_restaurante = :id ORDER BY aberta_em DESC');
+        $stmt->execute([':id' => $restaurante_id]);
+        $this->jsonResponse($stmt->fetchAll());
     }
 
-    public function createComanda(mixed $data)
+    /** O total NÃO vem mais do cliente: começa em 0 e é recalculado ao adicionar itens. */
+    public function createComanda(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO comandas (id_restaurante, id_cliente, funcionario_id, aberta_em, fechada_em, status, total) VALUES (:id_restaurante, :id_cliente, :funcionario_id, NOW(), NULL, "aberta", :total)');
-        $stmt->execute([
-            ':id_restaurante' => $data['id_restaurante'],
-            ':id_cliente' => $data['id_cliente'],
-            ':funcionario_id' => $data['funcionario_id'],
-            ':total' => $data['total']
-        ]);
+        $this->validate($data, ['id_restaurante', 'funcionario_id']);
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Comanda criada com sucesso']);
+        $stmt = $this->db()->prepare(
+            "INSERT INTO comandas (id_restaurante, id_cliente, funcionario_id, aberta_em, fechada_em, status, total)
+             VALUES (:id_restaurante, :id_cliente, :funcionario_id, NOW(), NULL, 'aberta', 0)"
+        );
+        $stmt->execute($this->params($data, ['id_restaurante', 'id_cliente', 'funcionario_id']));
+
+        $this->created('Comanda criada com sucesso');
+    }
+
+    public function fecharComanda(int $comanda_id): void
+    {
+        $stmt = $this->db()->prepare("UPDATE comandas SET status = 'fechada', fechada_em = NOW() WHERE id = :id AND status = 'aberta'");
+        $stmt->execute([':id' => $comanda_id]);
+
+        if ($stmt->rowCount() === 0) {
+            $this->ensureExists('comandas', $comanda_id);
+            throw new HttpException('A comanda já está fechada.', 409);
+        }
+
+        $this->jsonResponse(['message' => 'Comanda fechada com sucesso']);
     }
 }

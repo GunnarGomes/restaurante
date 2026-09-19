@@ -1,32 +1,23 @@
 <?php
 
 namespace Api\Controller;
-use \Api\Config\Database;
 
-class ControllerRestaurante
+use Api\Core\Controller;
+
+class ControllerRestaurante extends Controller
 {
-    public function getAllRestaurantes()
+    public function getAllRestaurantes(): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM restaurantes');
-        $stmt->execute();
-        $restaurantes = $stmt->fetchAll();
-
-        header('Content-Type: application/json');
-        echo json_encode($restaurantes);
+        $this->jsonResponse($this->db()->query('SELECT * FROM restaurantes')->fetchAll());
     }
 
-    public function createRestaurante(mixed $data)
+    public function createRestaurante(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO restaurantes (nome, cnpj, ativo, criado_em) VALUES (:nome, :cnpj, :ativo, NOW())');
-        $stmt->execute([
-            ':nome' => $data['nome'],
-            ':cnpj' => $data['cnpj'],
-            ':ativo' => $data['ativo']
-        ]);
+        $this->validate($data, ['nome', 'cnpj']);
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Restaurante criado com sucesso']);
+        $stmt = $this->db()->prepare('INSERT INTO restaurantes (nome, cnpj, ativo, criado_em) VALUES (:nome, :cnpj, :ativo, NOW())');
+        $stmt->execute($this->params($data, ['nome', 'cnpj', 'ativo'], ['ativo' => 1]));
+
+        $this->created('Restaurante criado com sucesso');
     }
 }

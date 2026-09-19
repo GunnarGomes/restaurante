@@ -1,46 +1,36 @@
 <?php
+
 namespace Api\Controller;
-use \Api\Config\Database;
+
 use Api\Core\Controller;
 
 class ControllerPedidos extends Controller
 {
-    public function getAllPedidos()
+    public function getPedidosByComanda(int $comanda_id): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM pedidos');
-        $stmt->execute();
-        $pedidos = $stmt->fetchAll();
-
-        $this->jsonResponse($pedidos);
+        $stmt = $this->db()->prepare('SELECT * FROM pedidos WHERE comanda_id = :id ORDER BY criado_em');
+        $stmt->execute([':id' => $comanda_id]);
+        $this->jsonResponse($stmt->fetchAll());
     }
-    public function getPedidoById(int $id)
+
+    public function getPedidoById(int $pedido_id): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM pedidos WHERE id = :id');
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
+        $stmt = $this->db()->prepare('SELECT * FROM pedidos WHERE id = :id');
+        $stmt->execute([':id' => $pedido_id]);
         $pedido = $stmt->fetch();
 
-        if ($pedido) {
-            $this->jsonResponse($pedido);
-        } else {
-            $this->jsonResponse(['error' => 'Pedido not found'], 404);
-        }
+        $pedido ? $this->jsonResponse($pedido) : $this->notFound('Pedido não encontrado.');
     }
-    public function createPedido(mixed $data)
+
+    public function createPedido(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO pedidos (comanda_id, funcionario_id, criado_em, status, observacao) VALUES (:comanda_id, :funcionario_id, NOW(), :status, :observacao)');
-        $stmt->execute([
-            ':comanda_id' => $data['comanda_id'],
-            ':funcionario_id' => $data['funcionario_id'],
-            ':status' => $data['status'],
-            ':observacao' => $data['observacao']
-        ]);
+        $this->validate($data, ['comanda_id', 'funcionario_id']);
 
-        $this->jsonResponse(['message' => 'Pedido criado com sucesso'], 201);
+        $stmt = $this->db()->prepare(
+            'INSERT INTO pedidos (comanda_id, funcionario_id, criado_em, status, observacao) VALUES (:comanda_id, :funcionario_id, NOW(), :status, :observacao)'
+        );
+        $stmt->execute($this->params($data, ['comanda_id', 'funcionario_id', 'status', 'observacao'], ['status' => 'pendente']));
+
+        $this->created('Pedido criado com sucesso');
     }
-
-    
 }

@@ -1,34 +1,35 @@
 <?php
 
 namespace Api\Controller;
-use \Api\Config\Database;
 
+use Api\Core\Controller;
+use Api\Core\HttpException;
 
-class ControllerPagamentos
+class ControllerPagamentos extends Controller
 {
-    public function getAllPagamentosByRestaurante(int $restaurante_id)
+    /** Filtra via comanda: o INSERT nunca gravava pagamentos.restaurante_id, então o filtro antigo não funcionava. */
+    public function getAllPagamentosByRestaurante(int $restaurante_id): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM pagamentos WHERE restaurante_id = :restaurante_id');
-        $stmt->execute([':restaurante_id' => $restaurante_id]);
-        $pagamentos = $stmt->fetchAll();
-
-        header('Content-Type: application/json');
-        echo json_encode($pagamentos);
+        $stmt = $this->db()->prepare(
+            'SELECT p.* FROM pagamentos p JOIN comandas c ON c.id = p.comanda_id WHERE c.id_restaurante = :id ORDER BY p.pago_em DESC'
+        );
+        $stmt->execute([':id' => $restaurante_id]);
+        $this->jsonResponse($stmt->fetchAll());
     }
 
-    public function createPagamento(mixed $data)
+    public function createPagamento(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO pagamentos (comanda_id, valor, metodo, pago_em) VALUES (:comanda_id, :valor, :metodo, :pago_em)');
-        $stmt->execute([
-            ':comanda_id' => $data['comanda_id'],
-            ':valor' => $data['valor'],
-            ':metodo' => $data['metodo'],
-            ':pago_em' => $data['pago_em']
-        ]);
+        $this->validate($data, ['comanda_id', 'valor', 'metodo']);
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Pagamento criado com sucesso']);
+        if (!is_numeric($data['valor']) || $data['valor'] <= 0) {
+            throw new HttpException('Valor inválido.', 422);
+        }
+
+        $stmt = $this->db()->prepare(
+            'INSERT INTO pagamentos (comanda_id, valor, metodo, pago_em) VALUES (:comanda_id, :valor, :metodo, COALESCE(:pago_em, NOW()))'
+        );
+        $stmt->execute($this->params($data, ['comanda_id', 'valor', 'metodo', 'pago_em']));
+
+        $this->created('Pagamento registrado com sucesso');
     }
 }

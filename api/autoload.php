@@ -1,20 +1,18 @@
 <?php
 
-spl_autoload_register(function ($class) {
-
+// PSR-4 simples: Api\Core\Router => Core/Router.php
+// O nome de pastas e arquivos precisa bater EXATAMENTE com namespace/classe (Linux diferencia maiúsculas).
+spl_autoload_register(function (string $class): void {
     $prefix = 'Api\\';
 
-    $baseDir = __DIR__ . '/';
-
-    if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
+    if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
         return;
     }
 
-    $relativeClass = substr($class, strlen($prefix));
+    $relative = substr($class, strlen($prefix));
+    $file = __DIR__ . '/' . str_replace('\\', '/', $relative) . '.php';
 
-    $file = $baseDir . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . '.php';
-
-    if (file_exists($file)) {
-        require_once $file;
+    if (is_file($file)) {
+        require $file;
     }
 });

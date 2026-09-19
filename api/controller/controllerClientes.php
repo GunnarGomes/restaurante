@@ -1,32 +1,27 @@
 <?php
 
 namespace Api\Controller;
-use \Api\Config\Database;
 
-class controllerClientes
+use Api\Core\Controller;
+
+class ControllerClientes extends Controller
 {
-    public function getAllClientesByRestaurante(int $restaurante_id)
+    public function getAllClientesByRestaurante(int $restaurante_id): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM clientes WHERE restaurante_id = :restaurante_id');
-        $stmt->execute([':restaurante_id' => $restaurante_id]);
-        $clientes = $stmt->fetchAll();
+        $stmt = $this->db()->prepare('SELECT * FROM clientes WHERE restaurante_id = :id');
+        $stmt->execute([':id' => $restaurante_id]);
+        $this->jsonResponse($stmt->fetchAll());
+    }
 
-        header('Content-Type: application/json');
-        echo json_encode($clientes);
-    }  
-
-    public function createCliente(mixed $data)
+    public function createCliente(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO clientes (nome, telefone, created_at, updated_at, restaurante_id) VALUES (:nome, :telefone, NOW(), NOW(), :restaurante_id)');
-        $stmt->execute([
-            ':nome' => $data['nome'],
-            ':telefone' => $data['telefone'],
-            ':restaurante_id' => $data['restaurante_id']
-        ]);
+        $this->validate($data, ['nome', 'restaurante_id']);
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Cliente criado com sucesso']);
+        $stmt = $this->db()->prepare(
+            'INSERT INTO clientes (nome, telefone, created_at, updated_at, restaurante_id) VALUES (:nome, :telefone, NOW(), NOW(), :restaurante_id)'
+        );
+        $stmt->execute($this->params($data, ['nome', 'telefone', 'restaurante_id']));
+
+        $this->created('Cliente criado com sucesso');
     }
 }

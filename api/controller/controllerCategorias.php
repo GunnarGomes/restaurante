@@ -1,31 +1,25 @@
 <?php
 
 namespace Api\Controller;
-use \Api\Config\Database;
 
-class controllerCategorias
+use Api\Core\Controller;
+
+class ControllerCategorias extends Controller
 {
-    public function getAllCategoriasByRestaurante(int $restaurante_id)
+    public function getAllCategoriasByRestaurante(int $restaurante_id): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM categorias WHERE restaurante_id = :restaurante_id');
-        $stmt->execute([':restaurante_id' => $restaurante_id]);
-        $categorias = $stmt->fetchAll();
-
-        header('Content-Type: application/json');
-        echo json_encode($categorias);
+        $stmt = $this->db()->prepare('SELECT * FROM categorias WHERE restaurante_id = :id');
+        $stmt->execute([':id' => $restaurante_id]);
+        $this->jsonResponse($stmt->fetchAll());
     }
 
-    public function createCategoria(mixed $data)
+    public function createCategoria(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('INSERT INTO categorias (nome, restaurante_id) VALUES (:nome, :restaurante_id)');
-        $stmt->execute([
-            ':nome' => $data['nome'],
-            ':restaurante_id' => $data['restaurante_id']
-        ]);
+        $this->validate($data, ['nome', 'restaurante_id']);
 
-        header('Content-Type: application/json');
-        echo json_encode(['message' => 'Categoria criada com sucesso']);
+        $stmt = $this->db()->prepare('INSERT INTO categorias (nome, restaurante_id) VALUES (:nome, :restaurante_id)');
+        $stmt->execute($this->params($data, ['nome', 'restaurante_id']));
+
+        $this->created('Categoria criada com sucesso');
     }
 }

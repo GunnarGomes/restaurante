@@ -2,27 +2,33 @@
 
 namespace Api\Controller;
 
-use \Api\Config\Database;
-use \Api\controller\ControllerContasAcesso;
+use Api\Core\Controller;
+use Api\Core\HttpException;
+use Api\Service\AuthService;
+use Api\Service\Jwt;
 
-
-class ControllerAuth
+class ControllerAuth extends Controller
 {
-    public function login(mixed $data)
+    public function login(array $data): void
     {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare('SELECT * FROM contas_acesso WHERE email = :email');
-        $stmt->execute([':email' => $data['email']]);
-        $contaAcesso = $stmt->fetch();
+        $this->validate($data, ['email', 'senha']);
 
-        if ($contaAcesso && password_verify($data['senha'], $contaAcesso['senha_hash'])) {
-            // Autenticação bem-sucedida
-            header('Content-Type: application/json');
-            echo json_encode(['message' => 'Login bem-sucedido']);
-        } else {
-            // Falha na autenticação
-            header('HTTP/1.1 401 Unauthorized');
-            echo json_encode(['error' => 'Credenciais inválidas']);
+        $conta = (new AuthService())->authenticate((string) $data['email'], (string) $data['senha']);
+        if ($conta === null) {
+            throw new HttpException('Credenciais inválidas.', 401);
         }
+
+        $token = Jwt::encode([
+            'sub'              => (int) $conta['id'],
+            'administrador_id' => (int) $conta['administrador_id'],
+            'email'            => $conta['email'],
+        ]);
+
+        $this->jsonResponse([
+            'token'      => $token,
+            'token_type' => 'Bearer',
+            'expires_in' => Jwt::ttl(),
+            'user'       => $conta,
+        ]);
     }
 }

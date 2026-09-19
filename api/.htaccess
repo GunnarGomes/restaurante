@@ -1,17 +1,16 @@
-RewriteEngine On
-
-
-Header always set Access-Control-Allow-Origin "*"
-Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
-
-RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^ - [R=204,L]
-
-
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [QSA,L]
-
 Options -Indexes
 DirectoryIndex index.php
+
+# Defesa extra: nunca servir arquivos sensíveis diretamente
+<FilesMatch "^(\.env.*|.*\.(sql|md|log|example))$">
+    Require all denied
+</FilesMatch>
+
+RewriteEngine On
+
+# Repassa o header Authorization ao PHP (Apache com CGI/FastCGI o descarta por padrão)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Toda requisição vai para o index.php (inclusive .env, autoload.php etc. -> viram 404 da API)
+RewriteRule ^index\.php$ - [L]
+RewriteRule ^ index.php [QSA,L]
